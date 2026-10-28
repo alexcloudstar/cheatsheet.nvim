@@ -2,7 +2,7 @@
 
 A searchable keybinding cheatsheet for Neovim, built on Telescope. It's made for the moment when you don't know what key you want, only what you want to do.
 
-Open it and you get a short list of tasks: move around, edit text, search and replace, and so on. Pick one and you see only the keys for that task. Every key also has hidden search words, so typing `delete` or `rename` finds the right keys even when the description says something else.
+Open it and you get a short list of tasks: move around, edit text, search and replace, and so on. Pick one and you see only the keys for that task. Or just start typing: search covers every key, whichever step you are on. Every key also has hidden search words, so typing `delete` or `rename` finds the right keys even when the description says something else.
 
 ## Screenshots
 
@@ -20,7 +20,9 @@ Not sure what `<C-x>` or `<leader>` means? There's a category for that.
 
 ## Features
 
-- Two steps: pick a task first, then browse its keys. `<C-a>` searches everything at once, `<C-b>` goes back.
+- Two steps: pick a task first, then browse its keys. `<C-b>` goes back.
+- Search works on every key at any step. Type in the task list or inside a task and results come from all tasks, each showing its task name. Clear the prompt to return to browsing. `<C-a>` jumps to the full list.
+- A legend for `<leader>`, `<C-x>`, `<S-x>`, `<A-x>` and `<CR>` stays pinned at the top while the picker is open (`pinned = false` hides it).
 - Built-in reference for Vim motions, operators, text objects, registers, macros, windows, and key notation (what `<C-x>` or `<leader>` means).
 - Your own maps live next to the built-in ones, marked with `★`, and also collect under "My maps".
 - Sync check: maps set in your config that you forgot to add show up under "Unlisted maps".

@@ -241,6 +241,36 @@ describe("rows", function()
             end
         end)
 
+        it("limits a view to its own rows while the query is empty", function()
+            local files = rows.select(allRows, "files")
+            local inScope = vim.tbl_filter(function(row)
+                return rows.isInScope(row, "files", "")
+            end, allRows)
+
+            assert.are.equal(#files, #inScope)
+            assert.is_true(#inScope < #allRows)
+        end)
+
+        it("searches every row from any view once the user types", function()
+            for _, row in ipairs(allRows) do
+                assert.is_true(rows.isInScope(row, "files", "delete"))
+            end
+        end)
+
+        it("treats a nil query like an empty one", function()
+            local outside = findRows(allRows, function(row)
+                return row.categoryId ~= "files"
+            end)[1]
+
+            assert.is_false(rows.isInScope(outside, "files", nil))
+        end)
+
+        it("keeps the all view showing everything with an empty query", function()
+            for _, row in ipairs(allRows) do
+                assert.is_true(rows.isInScope(row, rows.ALL_ID, ""))
+            end
+        end)
+
         it("lists every category plus My maps, with counts", function()
             local listed = rows.listCategories(allRows, categories)
             local mine = findCategory(listed, rows.MINE_ID)

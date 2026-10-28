@@ -128,7 +128,9 @@ When the cheatsheet opens, it reads the live mappings and keeps the ones defined
 | `:Cc` | Same as `:Cheatsheet`. Not defined by default, add `aliases = { "Cc" }` to enable it |
 | `<leader>cc` | Open the cheatsheet from normal mode. Change it with `open_key`, or set `open_key = false` to skip the mapping |
 
-Inside the picker, `<C-b>` goes back to the task list and `<C-a>` searches all keys. Whatever you have already typed carries over, so you can start typing in the task list and press `<C-a>` to search every key with that text. Both keys can be changed with `back_key` and `all_key`.
+Browsing stays in two steps (tasks, then keys), but typing always searches every key, whichever step you are on. With an empty prompt you see the tasks or the keys of the task you picked; as soon as you type, matching keys from all tasks appear, with their task shown in a column.
+
+Inside the picker, `<C-b>` goes back to the task list and `<C-a>` searches all keys. Both keys can be changed with `back_key` and `all_key`.
 
 ## License
 

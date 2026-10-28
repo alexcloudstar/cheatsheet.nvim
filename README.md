@@ -4,6 +4,20 @@ A searchable keybinding cheatsheet for Neovim, built on Telescope. It's made for
 
 Open it and you get a short list of tasks: move around, edit text, search and replace, and so on. Pick one and you see only the keys for that task. Every key also has hidden search words, so typing `delete` or `rename` finds the right keys even when the description says something else.
 
+## Screenshots
+
+Step 1: pick what you want to do.
+
+![Task picker listing categories like Move around, Edit text and Search and replace](assets/task-picker.png)
+
+Step 2: browse only the keys for that task. Your own keys are marked with a star.
+
+![Keys for the Edit text category, with mode, key and description columns](assets/keys-edit-text.png)
+
+Not sure what `<C-x>` or `<leader>` means? There's a category for that.
+
+![The key notation category explaining Ctrl, Shift, Alt, leader and mode letters](assets/key-notation.png)
+
 ## Features
 
 - Two steps: pick a task first, then browse its keys. `<C-a>` searches everything at once, `<C-b>` goes back.

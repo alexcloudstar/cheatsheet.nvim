@@ -1,4 +1,5 @@
 local config = require("cheatsheet.config")
+local pinned = require("cheatsheet.pinned")
 local rows = require("cheatsheet.rows")
 
 local M = {}
@@ -41,9 +42,11 @@ end
 
 local mapNavigation = function(map, promptBufnr, sourceBuffer, canGoBack)
     local options = config.options
+    pinned.show(promptBufnr)
     map({ "i", "n" }, options.all_key, function()
+        local query = require("telescope.actions.state").get_current_line()
         closeThen(promptBufnr, function()
-            openKeys(rows.ALL_CATEGORY, sourceBuffer)
+            openKeys(rows.ALL_CATEGORY, sourceBuffer, query)
         end)
     end)
     if canGoBack then
@@ -55,7 +58,7 @@ local mapNavigation = function(map, promptBufnr, sourceBuffer, canGoBack)
     end
 end
 
-openCategories = function(sourceBuffer)
+openCategories = function(sourceBuffer, query)
     local pickers = require("telescope.pickers")
     local finders = require("telescope.finders")
     local actions = require("telescope.actions")
@@ -73,7 +76,8 @@ openCategories = function(sourceBuffer)
     })
 
     pickers.new({}, {
-        prompt_title = CATEGORY_TITLE,
+        prompt_title = string.format("%s  (%s searches all keys)", CATEGORY_TITLE, config.options.all_key),
+        default_text = query,
         finder = finders.new_table({
             results = rows.listCategories(allRows, categories),
             entry_maker = function(category)
@@ -103,7 +107,7 @@ openCategories = function(sourceBuffer)
     }):find()
 end
 
-openKeys = function(category, sourceBuffer)
+openKeys = function(category, sourceBuffer, query)
     local pickers = require("telescope.pickers")
     local finders = require("telescope.finders")
     local actions = require("telescope.actions")
@@ -117,6 +121,7 @@ openKeys = function(category, sourceBuffer)
 
     pickers.new({}, {
         prompt_title = string.format("%s  (%s back, %s all)", category.label, options.back_key, options.all_key),
+        default_text = query,
         finder = finders.new_table({
             results = keyRows,
             entry_maker = function(row)

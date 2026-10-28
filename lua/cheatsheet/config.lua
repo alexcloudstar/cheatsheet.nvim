@@ -9,6 +9,7 @@ local DEFAULTS = {
     copy_register = "+",
     back_key = "<C-b>",
     all_key = "<C-a>",
+    pinned = true,
 }
 
 M.options = vim.deepcopy(DEFAULTS)

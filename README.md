@@ -101,6 +101,7 @@ If you add a key that matches a built-in entry (same key and mode), yours replac
     copy_register = "+",
     back_key = "<C-b>",
     all_key = "<C-a>",
+    pinned = true,
 }
 ```
 
@@ -113,6 +114,7 @@ If you add a key that matches a built-in entry (same key and mode), yours replac
 | `config_dir` | Directory that counts as "your config" for the sync check. Defaults to `stdpath("config")` |
 | `copy_register` | Register that Enter copies the key into |
 | `back_key`, `all_key` | Keys inside the picker |
+| `pinned` | Keep a one-line legend (`<leader>`, `<C-x>`, `<S-x>`, `<A-x>`, `<CR>`) pinned at the top of the screen while the picker is open. `false` to hide it |
 
 ## How the sync check works
 
@@ -126,7 +128,7 @@ When the cheatsheet opens, it reads the live mappings and keeps the ones defined
 | `:Cc` | Same as `:Cheatsheet`. Not defined by default, add `aliases = { "Cc" }` to enable it |
 | `<leader>cc` | Open the cheatsheet from normal mode. Change it with `open_key`, or set `open_key = false` to skip the mapping |
 
-Inside the picker, `<C-b>` goes back to the task list and `<C-a>` searches all keys. Both can be changed with `back_key` and `all_key`.
+Inside the picker, `<C-b>` goes back to the task list and `<C-a>` searches all keys. Whatever you have already typed carries over, so you can start typing in the task list and press `<C-a>` to search every key with that text. Both keys can be changed with `back_key` and `all_key`.
 
 ## License
 

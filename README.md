@@ -118,11 +118,15 @@ If you add a key that matches a built-in entry (same key and mode), yours replac
 
 When the cheatsheet opens, it reads the live mappings and keeps the ones defined in a file under `config_dir`. Any that aren't in your cheatsheet entries are listed under "Unlisted maps". Maps from plugins and Neovim defaults are ignored. Buffer-local maps only show up when you open the cheatsheet from a buffer that has them.
 
-## Commands
+## Commands and keys
 
-| Command | Action |
+| Command or key | Action |
 | --- | --- |
 | `:Cheatsheet` | Open the cheatsheet |
+| `:Cc` | Same as `:Cheatsheet`. Not defined by default, add `aliases = { "Cc" }` to enable it |
+| `<leader>cc` | Open the cheatsheet from normal mode. Change it with `open_key`, or set `open_key = false` to skip the mapping |
+
+Inside the picker, `<C-b>` goes back to the task list and `<C-a>` searches all keys. Both can be changed with `back_key` and `all_key`.
 
 ## License
 

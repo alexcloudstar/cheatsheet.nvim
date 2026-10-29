@@ -1,9 +1,10 @@
 local config = require("cheatsheet.config")
+local overlay = require("cheatsheet.overlay")
 
 local M = {}
 
 local SEPARATOR = "   "
-local ZINDEX = 10
+local HIGHLIGHT = "Title"
 
 local describeLeader = function()
     local leader = vim.g.mapleader or "\\"
@@ -24,35 +25,27 @@ M.text = function()
     return " " .. table.concat(M.lines(), SEPARATOR) .. " "
 end
 
+local placeBelowPicker = function(text)
+    return function(promptBufnr)
+        local picker = overlay.getPicker(promptBufnr)
+        local results = overlay.getOuterBounds(picker.results_win)
+        local prompt = overlay.getOuterBounds(picker.prompt_win)
+        local width = math.min(vim.fn.strdisplaywidth(text), vim.o.columns)
+        local centered = results.left + math.floor((results.width - width) / 2)
+        return {
+            row = math.min(math.max(results.bottom, prompt.bottom), vim.o.lines - 1),
+            col = math.max(centered, 0),
+            width = width,
+        }
+    end
+end
+
 M.show = function(promptBufnr)
     if not config.options.pinned then
         return
     end
     local text = M.text()
-    local width = math.min(vim.fn.strdisplaywidth(text), vim.o.columns)
-    local bufnr = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { text })
-    local winnr = vim.api.nvim_open_win(bufnr, false, {
-        relative = "editor",
-        row = 0,
-        col = math.floor((vim.o.columns - width) / 2),
-        width = width,
-        height = 1,
-        style = "minimal",
-        border = "none",
-        focusable = false,
-        zindex = ZINDEX,
-    })
-    vim.wo[winnr].winhighlight = "Normal:Title"
-    vim.api.nvim_create_autocmd("BufWipeout", {
-        buffer = promptBufnr,
-        once = true,
-        callback = function()
-            if vim.api.nvim_win_is_valid(winnr) then
-                vim.api.nvim_win_close(winnr, true)
-            end
-        end,
-    })
+    overlay.open(promptBufnr, { text = text, highlight = HIGHLIGHT, place = placeBelowPicker(text) })
 end
 
 return M

@@ -1,5 +1,6 @@
 local config = require("cheatsheet.config")
 local pinned = require("cheatsheet.pinned")
+local header = require("cheatsheet.header")
 local rows = require("cheatsheet.rows")
 
 local M = {}
@@ -10,7 +11,7 @@ local COUNT_WIDTH = 8
 local CUSTOM_MARKER = "★"
 local MARKER_WIDTH = 1
 local CATEGORY_WIDTH = 24
-local MODE_WIDTH = 3
+local MODE_WIDTH = 4
 local KEY_WIDTH = 26
 local COLUMN_SEPARATOR = " │ "
 
@@ -56,8 +57,6 @@ local mapNavigation = function(map, promptBufnr, sourceBuffer, canGoBack)
     end
 end
 
--- Hides entries outside the current level while the prompt is empty, and lets
--- everything through once the user types, so search always covers every key.
 local scopedSorter = function(baseSorter, isInScope)
     local baseScore = baseSorter.scoring_function
     baseSorter.scoring_function = function(self, prompt, line, entry)
@@ -69,13 +68,19 @@ local scopedSorter = function(baseSorter, isInScope)
     return baseSorter
 end
 
-local makeKeyEntry = function(row, displayer)
+local isCategoryRedundant = function(row, openCategory)
+    local isInOpenCategory = openCategory ~= nil and row.categoryId == openCategory.id
+    return isInOpenCategory and require("telescope.actions.state").get_current_line() == ""
+end
+
+local makeKeyEntry = function(row, displayer, openCategory)
     return {
         value = row,
         isKey = true,
         ordinal = table.concat({ row.key, row.desc, row.tags, row.categoryLabel, row.modes }, " "),
         display = function()
-            return displayer({ row.isCustom and CUSTOM_MARKER or "", row.modes, row.key, row.categoryLabel, row.desc })
+            local categoryLabel = isCategoryRedundant(row, openCategory) and "" or row.categoryLabel
+            return displayer({ row.isCustom and CUSTOM_MARKER or "", row.modes, row.key, categoryLabel, row.desc })
         end,
     }
 end
@@ -171,7 +176,7 @@ openKeys = function(category, sourceBuffer, query)
         finder = finders.new_table({
             results = allRows,
             entry_maker = function(row)
-                return makeKeyEntry(row, displayer)
+                return makeKeyEntry(row, displayer, category)
             end,
         }),
         sorter = scopedSorter(telescopeConfig.generic_sorter({}), function(entry, prompt)
@@ -182,6 +187,7 @@ openKeys = function(category, sourceBuffer, query)
                 copySelection(promptBufnr)
             end)
             mapNavigation(map, promptBufnr, sourceBuffer, true)
+            header.show(promptBufnr, displayer)
             return true
         end,
     }):find()

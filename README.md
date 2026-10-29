@@ -1,6 +1,6 @@
 # cheatsheet.nvim
 
-A searchable keybinding cheatsheet for Neovim, built on Telescope. It's made for the moment when you don't know what key you want, only what you want to do.
+A keybinding cheatsheet for Neovim, built on Telescope. Look up a key by task or keyword without leaving the editor to search the web. You can add your own keys to it.
 
 Open it and you get a short list of tasks: move around, edit text, search and replace, and so on. Pick one and you see only the keys for that task. Or just start typing: search covers every key, whichever step you are on. Every key also has hidden search words, so typing `delete` or `rename` finds the right keys even when the description says something else.
 

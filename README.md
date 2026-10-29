@@ -2,7 +2,7 @@
 
 A searchable keybinding cheatsheet for Neovim, built on Telescope. It's made for the moment when you don't know what key you want, only what you want to do.
 
-Open it and you get a short list of tasks: move around, edit text, search and replace, and so on. Pick one and you see only the keys for that task. Every key also has hidden search words, so typing `delete` or `rename` finds the right keys even when the description says something else.
+Open it and you get a short list of tasks: move around, edit text, search and replace, and so on. Pick one and you see only the keys for that task. Or just start typing: search covers every key, whichever step you are on. Every key also has hidden search words, so typing `delete` or `rename` finds the right keys even when the description says something else.
 
 ## Screenshots
 
@@ -20,7 +20,9 @@ Not sure what `<C-x>` or `<leader>` means? There's a category for that.
 
 ## Features
 
-- Two steps: pick a task first, then browse its keys. `<C-a>` searches everything at once, `<C-b>` goes back.
+- Two steps: pick a task first, then browse its keys. `<C-b>` goes back.
+- Search works on every key at any step. Type in the task list or inside a task and results come from all tasks, each showing its task name. Clear the prompt to return to browsing. `<C-a>` jumps to the full list.
+- A legend for `<leader>`, `<C-x>`, `<S-x>`, `<A-x>` and `<CR>` stays pinned at the top while the picker is open (`pinned = false` hides it).
 - Built-in reference for Vim motions, operators, text objects, registers, macros, windows, and key notation (what `<C-x>` or `<leader>` means).
 - Your own maps live next to the built-in ones, marked with `★`, and also collect under "My maps".
 - Sync check: maps set in your config that you forgot to add show up under "Unlisted maps".
@@ -101,6 +103,7 @@ If you add a key that matches a built-in entry (same key and mode), yours replac
     copy_register = "+",
     back_key = "<C-b>",
     all_key = "<C-a>",
+    pinned = true,
 }
 ```
 
@@ -113,6 +116,7 @@ If you add a key that matches a built-in entry (same key and mode), yours replac
 | `config_dir` | Directory that counts as "your config" for the sync check. Defaults to `stdpath("config")` |
 | `copy_register` | Register that Enter copies the key into |
 | `back_key`, `all_key` | Keys inside the picker |
+| `pinned` | Keep a one-line legend (`<leader>`, `<C-x>`, `<S-x>`, `<A-x>`, `<CR>`) pinned at the top of the screen while the picker is open. `false` to hide it |
 
 ## How the sync check works
 
@@ -126,7 +130,9 @@ When the cheatsheet opens, it reads the live mappings and keeps the ones defined
 | `:Cc` | Same as `:Cheatsheet`. Not defined by default, add `aliases = { "Cc" }` to enable it |
 | `<leader>cc` | Open the cheatsheet from normal mode. Change it with `open_key`, or set `open_key = false` to skip the mapping |
 
-Inside the picker, `<C-b>` goes back to the task list and `<C-a>` searches all keys. Both can be changed with `back_key` and `all_key`.
+Browsing stays in two steps (tasks, then keys), but typing always searches every key, whichever step you are on. With an empty prompt you see the tasks or the keys of the task you picked; as soon as you type, matching keys from all tasks appear, with their task shown in a column.
+
+Inside the picker, `<C-b>` goes back to the task list and `<C-a>` searches all keys. Both keys can be changed with `back_key` and `all_key`.
 
 ## License
 

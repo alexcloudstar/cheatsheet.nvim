@@ -219,6 +219,15 @@ M.select = function(allRows, viewId)
     end, allRows)
 end
 
+-- With an empty query a view only shows its own rows; once the user types,
+-- every row is searchable no matter which view is open.
+M.isInScope = function(row, viewId, query)
+    if query and query ~= "" then
+        return true
+    end
+    return #M.select({ row }, viewId) == 1
+end
+
 M.listCategories = function(allRows, categories)
     local listed = vim.list_slice(categories)
     table.insert(listed, M.MINE_CATEGORY)

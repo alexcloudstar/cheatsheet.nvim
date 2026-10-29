@@ -1,4 +1,6 @@
 local config = require("cheatsheet.config")
+local pinned = require("cheatsheet.pinned")
+local header = require("cheatsheet.header")
 local rows = require("cheatsheet.rows")
 
 local M = {}
@@ -9,7 +11,7 @@ local COUNT_WIDTH = 8
 local CUSTOM_MARKER = "★"
 local MARKER_WIDTH = 1
 local CATEGORY_WIDTH = 24
-local MODE_WIDTH = 3
+local MODE_WIDTH = 4
 local KEY_WIDTH = 26
 local COLUMN_SEPARATOR = " │ "
 
@@ -26,24 +28,24 @@ local closeThen = function(promptBufnr, nextStep)
     vim.schedule(nextStep)
 end
 
-local createKeyDisplayer = function(showCategory)
+local createKeyDisplayer = function()
     local items = {
         { width = MARKER_WIDTH },
         { width = MODE_WIDTH },
         { width = KEY_WIDTH },
+        { width = CATEGORY_WIDTH },
+        { remaining = true },
     }
-    if showCategory then
-        table.insert(items, { width = CATEGORY_WIDTH })
-    end
-    table.insert(items, { remaining = true })
     return require("telescope.pickers.entry_display").create({ separator = COLUMN_SEPARATOR, items = items })
 end
 
 local mapNavigation = function(map, promptBufnr, sourceBuffer, canGoBack)
     local options = config.options
+    pinned.show(promptBufnr)
     map({ "i", "n" }, options.all_key, function()
+        local query = require("telescope.actions.state").get_current_line()
         closeThen(promptBufnr, function()
-            openKeys(rows.ALL_CATEGORY, sourceBuffer)
+            openKeys(rows.ALL_CATEGORY, sourceBuffer, query)
         end)
     end)
     if canGoBack then
@@ -55,7 +57,45 @@ local mapNavigation = function(map, promptBufnr, sourceBuffer, canGoBack)
     end
 end
 
-openCategories = function(sourceBuffer)
+local scopedSorter = function(baseSorter, isInScope)
+    local baseScore = baseSorter.scoring_function
+    baseSorter.scoring_function = function(self, prompt, line, entry)
+        if not isInScope(entry, prompt) then
+            return -1
+        end
+        return baseScore(self, prompt, line, entry)
+    end
+    return baseSorter
+end
+
+local isCategoryRedundant = function(row, openCategory)
+    local isInOpenCategory = openCategory ~= nil and row.categoryId == openCategory.id
+    return isInOpenCategory and require("telescope.actions.state").get_current_line() == ""
+end
+
+local makeKeyEntry = function(row, displayer, openCategory)
+    return {
+        value = row,
+        isKey = true,
+        ordinal = table.concat({ row.key, row.desc, row.tags, row.categoryLabel, row.modes }, " "),
+        display = function()
+            local categoryLabel = isCategoryRedundant(row, openCategory) and "" or row.categoryLabel
+            return displayer({ row.isCustom and CUSTOM_MARKER or "", row.modes, row.key, categoryLabel, row.desc })
+        end,
+    }
+end
+
+local copySelection = function(promptBufnr)
+    local selection = require("telescope.actions.state").get_selected_entry()
+    if not selection then
+        return false
+    end
+    require("telescope.actions").close(promptBufnr)
+    copyKey(selection.value.key)
+    return true
+end
+
+openCategories = function(sourceBuffer, query)
     local pickers = require("telescope.pickers")
     local finders = require("telescope.finders")
     local actions = require("telescope.actions")
@@ -63,7 +103,7 @@ openCategories = function(sourceBuffer)
     local telescopeConfig = require("telescope.config").values
 
     local allRows, categories = rows.collectAll(sourceBuffer)
-    local displayer = require("telescope.pickers.entry_display").create({
+    local categoryDisplayer = require("telescope.pickers.entry_display").create({
         separator = COLUMN_SEPARATOR,
         items = {
             { width = CATEGORY_LABEL_WIDTH },
@@ -71,26 +111,43 @@ openCategories = function(sourceBuffer)
             { remaining = true },
         },
     })
+    local keyDisplayer = createKeyDisplayer()
+
+    local results = {}
+    for _, category in ipairs(rows.listCategories(allRows, categories)) do
+        table.insert(results, {
+            value = category,
+            isKey = false,
+            ordinal = table.concat({ category.label, category.desc, category.tags or "" }, " "),
+            display = function()
+                return categoryDisplayer({ category.label, category.count .. " keys", category.desc })
+            end,
+        })
+    end
+    for _, row in ipairs(allRows) do
+        table.insert(results, makeKeyEntry(row, keyDisplayer))
+    end
 
     pickers.new({}, {
         prompt_title = CATEGORY_TITLE,
+        default_text = query,
         finder = finders.new_table({
-            results = rows.listCategories(allRows, categories),
-            entry_maker = function(category)
-                return {
-                    value = category,
-                    ordinal = table.concat({ category.label, category.desc, category.tags or "" }, " "),
-                    display = function()
-                        return displayer({ category.label, category.count .. " keys", category.desc })
-                    end,
-                }
+            results = results,
+            entry_maker = function(entry)
+                return entry
             end,
         }),
-        sorter = telescopeConfig.generic_sorter({}),
+        sorter = scopedSorter(telescopeConfig.generic_sorter({}), function(entry, prompt)
+            return (prompt ~= "") == entry.isKey
+        end),
         attach_mappings = function(promptBufnr, map)
             actions.select_default:replace(function()
                 local selection = actionState.get_selected_entry()
                 if not selection then
+                    return
+                end
+                if selection.isKey then
+                    copySelection(promptBufnr)
                     return
                 end
                 closeThen(promptBufnr, function()
@@ -103,48 +160,34 @@ openCategories = function(sourceBuffer)
     }):find()
 end
 
-openKeys = function(category, sourceBuffer)
+openKeys = function(category, sourceBuffer, query)
     local pickers = require("telescope.pickers")
     local finders = require("telescope.finders")
     local actions = require("telescope.actions")
-    local actionState = require("telescope.actions.state")
     local telescopeConfig = require("telescope.config").values
     local options = config.options
 
-    local keyRows = rows.select((rows.collectAll(sourceBuffer)), category.id)
-    local showCategory = category.id == rows.ALL_ID or category.id == rows.MINE_ID
-    local displayer = createKeyDisplayer(showCategory)
+    local allRows = rows.collectAll(sourceBuffer)
+    local displayer = createKeyDisplayer()
 
     pickers.new({}, {
         prompt_title = string.format("%s  (%s back, %s all)", category.label, options.back_key, options.all_key),
+        default_text = query,
         finder = finders.new_table({
-            results = keyRows,
+            results = allRows,
             entry_maker = function(row)
-                return {
-                    value = row,
-                    ordinal = table.concat({ row.key, row.desc, row.tags, row.categoryLabel, row.modes }, " "),
-                    display = function()
-                        local columns = { row.isCustom and CUSTOM_MARKER or "", row.modes, row.key }
-                        if showCategory then
-                            table.insert(columns, row.categoryLabel)
-                        end
-                        table.insert(columns, row.desc)
-                        return displayer(columns)
-                    end,
-                }
+                return makeKeyEntry(row, displayer, category)
             end,
         }),
-        sorter = telescopeConfig.generic_sorter({}),
+        sorter = scopedSorter(telescopeConfig.generic_sorter({}), function(entry, prompt)
+            return rows.isInScope(entry.value, category.id, prompt)
+        end),
         attach_mappings = function(promptBufnr, map)
             actions.select_default:replace(function()
-                local selection = actionState.get_selected_entry()
-                if not selection then
-                    return
-                end
-                actions.close(promptBufnr)
-                copyKey(selection.value.key)
+                copySelection(promptBufnr)
             end)
             mapNavigation(map, promptBufnr, sourceBuffer, true)
+            header.show(promptBufnr, displayer)
             return true
         end,
     }):find()
